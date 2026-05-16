@@ -35,14 +35,14 @@
 
       devShells = forSupportedSystems (pkgs: let
         pebble-pkgs = self.packages.${pkgs.system};
+        pypkjsEnv = pkgs.python3.withPackages (_: [ pebble-pkgs.pypkjs ]);
       in {
         default = (pkgs.buildFHSEnv {
           name = "pebble-dev";
           targetPkgs = _: [ pebble-pkgs.pebble-tool ];
-          # Use our Nix-packaged qemu-pebble instead of the SDK's generic Linux
-          # binary, which has unsatisfiable library dependencies on NixOS.
           profile = ''
             export PEBBLE_QEMU_PATH=${pebble-pkgs.qemu-pebble}/bin/qemu-pebble
+            export PYTHONPATH=${pypkjsEnv}/${pkgs.python3.sitePackages}
           '';
           runScript = "bash";
         }).env;
