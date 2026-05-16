@@ -33,9 +33,19 @@
         default = pebble-tool;
       });
 
-      # TODO: Add correct packages
-      devShells = forSupportedSystems (pkgs: {
-        default = pkgs.mkShellNoCC { };
+      devShells = forSupportedSystems (pkgs: let
+        pebble-pkgs = self.packages.${pkgs.system};
+      in {
+        default = (pkgs.buildFHSEnv {
+          name = "pebble-dev";
+          targetPkgs = _: [ pebble-pkgs.pebble-tool ];
+          # Use our Nix-packaged qemu-pebble instead of the SDK's generic Linux
+          # binary, which has unsatisfiable library dependencies on NixOS.
+          profile = ''
+            export PEBBLE_QEMU_PATH=${pebble-pkgs.qemu-pebble}/bin/qemu-pebble
+          '';
+          runScript = "bash";
+        }).env;
       });
 
       formatter = forSupportedSystems (pkgs: pkgs.alejandra);
